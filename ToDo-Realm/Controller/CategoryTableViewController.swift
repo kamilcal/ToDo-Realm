@@ -7,6 +7,7 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class CategoryTableViewController: UITableViewController {
     
@@ -19,7 +20,7 @@ class CategoryTableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         loadCategories()
-
+        tableView.rowHeight = 80.0
     }
     //MARK: - TableView Datasource Methods
     
@@ -34,7 +35,7 @@ class CategoryTableViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
         
         cell.textLabel?.text = categoryData?[indexPath.row].name ?? "No Categories Added Yet"
-        
+        cell.backgroundColor = UIColor(hexString: (categoryData?[indexPath.row].colour)!)
         return cell
         
     }
@@ -70,114 +71,119 @@ class CategoryTableViewController: UITableViewController {
     
     func loadCategories() {
         
-         categoryData = realm.objects(Category.self)
-    
+        categoryData = realm.objects(Category.self)
+        
         self.tableView.reloadData()
         
     }
     
     //MARK: - Add New Categories
-
+    
     @IBAction func didAddBarButtonItemTapped(_ sender: UIBarButtonItem) {
         presentAddAlert()
     }
-        func presentAddAlert() {
-            presentAlert(title: "Add New Category",
-                         message: nil,
-                         defaultButtonTitle: "Add",
-                         cancelButtonTitle: "Cancel",
-                         isTextFieldAvaible: true,
-                         defaultButtonHandler: { _ in
+    func presentAddAlert() {
+        presentAlert(title: "Add New Category",
+                     message: nil,
+                     defaultButtonTitle: "Add",
+                     cancelButtonTitle: "Cancel",
+                     isTextFieldAvaible: true,
+                     defaultButtonHandler: { _ in
+            
+            let text = self.button.textFields?.first?.text
+            if text != "" {
                 
-                let text = self.button.textFields?.first?.text
-                if text != "" {
-
-                        
-                        let newCategory = Category()
-                        newCategory.setValue(text, forKey: "name")
-                        self.saveCategories(category: newCategory)
-                        self.loadCategories()
-                    
-                } else {
-                    self.presentWarningAlert()
-                }
-            })
-        }
-                         
-        
-        //    MARK: - presentAlert&presentWarningAlert
-        
-        func presentWarningAlert() {
-            
-            presentAlert(title: "Notification", message: "You cannot add an empty element to the list.", cancelButtonTitle: "Done")
-        }
-        
-        func presentAlert(title: String?,
-                          message: String?,
-                          preferredStyle: UIAlertController.Style = .alert,
-                          defaultButtonTitle: String? = nil,
-                          cancelButtonTitle: String?,
-                          isTextFieldAvaible: Bool = false,
-                          defaultButtonHandler: ((UIAlertAction) -> Void)? = nil){
-            
-            button = UIAlertController (title: title,
-                                        message: message,
-                                        preferredStyle: preferredStyle)
-            if defaultButtonTitle != nil {
-                let defaultButton = UIAlertAction(title: defaultButtonTitle,
-                                                  style: .default,
-                                                  handler: defaultButtonHandler)
-                button.addAction(defaultButton)
+                
+                let newCategory = Category()
+                newCategory.setValue(text, forKey: "name")
+                newCategory.colour = UIColor.randomFlat().hexValue()
+                self.saveCategories(category: newCategory)
+                self.loadCategories()
+                
+            } else {
+                self.presentWarningAlert()
             }
-            
-            let cancelButton = UIAlertAction(title: cancelButtonTitle,
-                                             style: .cancel)
-            
-            if isTextFieldAvaible {
-                button.addTextField()
-            }
-            button.addAction(cancelButton)
-            present(button, animated: true)
+        })
+    }
+    
+    
+    //    MARK: - presentAlert&presentWarningAlert
+    
+    func presentWarningAlert() {
+        
+        presentAlert(title: "Notification", message: "You cannot add an empty element to the list.", cancelButtonTitle: "Done")
+    }
+    
+    func presentAlert(title: String?,
+                      message: String?,
+                      preferredStyle: UIAlertController.Style = .alert,
+                      defaultButtonTitle: String? = nil,
+                      cancelButtonTitle: String?,
+                      isTextFieldAvaible: Bool = false,
+                      defaultButtonHandler: ((UIAlertAction) -> Void)? = nil){
+        
+        button = UIAlertController (title: title,
+                                    message: message,
+                                    preferredStyle: preferredStyle)
+        if defaultButtonTitle != nil {
+            let defaultButton = UIAlertAction(title: defaultButtonTitle,
+                                              style: .default,
+                                              handler: defaultButtonHandler)
+            button.addAction(defaultButton)
         }
+        
+        let cancelButton = UIAlertAction(title: cancelButtonTitle,
+                                         style: .cancel)
+        
+        if isTextFieldAvaible {
+            button.addTextField()
+        }
+        button.addAction(cancelButton)
+        present(button, animated: true)
+    }
     //    MARK: - Swipe Actions
     
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         
         let deleteActions = UIContextualAction(style: .normal,
                                                title: "Delete") { _, _, _ in
+            let realm = try! Realm()
+               try! realm.write {
+                   realm.delete((self.categoryData?[indexPath.row])!)
+               }
+            self.tableView.reloadData()
 
-            self.loadCategories()
         }
-//        let editActions = UIContextualAction(style: .normal,
-//                                             title: "Edit",
-//                                             handler: { _, _, _ in
-//            self.presentAlert(title: "Edit Elemet",
-//                              message: nil,
-//                              defaultButtonTitle: "Edit",
-//                              cancelButtonTitle: "Cancel",
-//                              isTextFieldAvaible: true,
-//                              defaultButtonHandler: { _ in
-//
-//                let text = self.button.textFields?.first?.text
-//                if text != "" {
-//                    self.categoryData?[indexPath.row].setValue(text, forKey: "name")
-//
-//                    let newCategory = Category()
-//                    newCategory.setValue(text, forKey: "name")
-//                    self.saveCategories(category: newCategory)
-//                    self.tableView.reloadData()
-//                } else {
-//                    self.presentWarningAlert()
-//                }
-//            })
-//        })
+        //        let editActions = UIContextualAction(style: .normal,
+        //                                             title: "Edit",
+        //                                             handler: { _, _, _ in
+        //            self.presentAlert(title: "Edit Elemet",
+        //                              message: nil,
+        //                              defaultButtonTitle: "Edit",
+        //                              cancelButtonTitle: "Cancel",
+        //                              isTextFieldAvaible: true,
+        //                              defaultButtonHandler: { _ in
+        //
+        //                let text = self.button.textFields?.first?.text
+        //                if text != "" {
+        //                    self.categoryData?[indexPath.row].setValue(text, forKey: "name")
+        //
+        //                    let newCategory = Category()
+        //                    newCategory.setValue(text, forKey: "name")
+        //                    self.saveCategories(category: newCategory)
+        //                    self.tableView.reloadData()
+        //                } else {
+        //                    self.presentWarningAlert()
+        //                }
+        //            })
+        //        })
         deleteActions.backgroundColor = UIColor.red
         
         let config = UISwipeActionsConfiguration(actions: [deleteActions])
         return config
     }
     
-  
-    }
+    
+}
 
 

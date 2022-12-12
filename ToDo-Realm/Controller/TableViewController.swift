@@ -7,6 +7,7 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class TableViewController: UITableViewController {
     
@@ -27,7 +28,8 @@ class TableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         loadItems()
-
+        tableView.rowHeight = 80.0
+        
     }
     //    MARK: - didAddBarButtonItemTapped
     @IBAction func didAddBarButtonItemTapped(_ sender: UIBarButtonItem) {
@@ -92,6 +94,10 @@ class TableViewController: UITableViewController {
         if let item = data?[indexPath.row]{
             cell.textLabel?.text = item.value(forKey: "title") as? String
             
+            if let colour = UIColor(hexString: selectedCategory!.colour)?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(data!.count)) {
+                cell.backgroundColor = colour
+                cell.textLabel?.textColor = ContrastColorOf(colour, returnFlat: true)
+            }
             cell.accessoryType = item.done ? .checkmark : .none
         }
         else {
