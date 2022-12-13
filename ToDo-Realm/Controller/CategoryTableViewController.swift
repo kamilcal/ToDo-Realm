@@ -21,7 +21,15 @@ class CategoryTableViewController: UITableViewController {
         super.viewDidLoad()
         loadCategories()
         tableView.rowHeight = 80.0
+        tableView.separatorStyle = .none
+        navigationController?.navigationBar.backgroundColor = UIColor.white
     }
+    
+    //    override func viewWillAppear(_ animated: Bool) {
+    //        guard let navBar = navigationController?.navigationBar else { fatalError("Navigation controller does not exist.")
+    //        }
+    //        navBar.backgroundColor = UIColor(hexString: "#1D9BF6")
+    //    }
     //MARK: - TableView Datasource Methods
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -34,8 +42,14 @@ class CategoryTableViewController: UITableViewController {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
         
-        cell.textLabel?.text = categoryData?[indexPath.row].name ?? "No Categories Added Yet"
-        cell.backgroundColor = UIColor(hexString: (categoryData?[indexPath.row].colour)!)
+        cell.textLabel?.text = categoryData?[indexPath.row].name
+        
+        if let category = categoryData?[indexPath.row]{
+            
+            guard let categoryColour = UIColor(hexString: category.colour) else { fatalError() }
+            cell.backgroundColor = categoryColour
+            cell.textLabel?.textColor = ContrastColorOf(categoryColour, returnFlat: true)
+        }
         return cell
         
     }
@@ -148,11 +162,11 @@ class CategoryTableViewController: UITableViewController {
         let deleteActions = UIContextualAction(style: .normal,
                                                title: "Delete") { _, _, _ in
             let realm = try! Realm()
-               try! realm.write {
-                   realm.delete((self.categoryData?[indexPath.row])!)
-               }
+            try! realm.write {
+                realm.delete((self.categoryData?[indexPath.row])!)
+            }
             self.tableView.reloadData()
-
+            
         }
         //        let editActions = UIContextualAction(style: .normal,
         //                                             title: "Edit",

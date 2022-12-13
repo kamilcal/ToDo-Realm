@@ -21,6 +21,7 @@ class TableViewController: UITableViewController {
     var selectedCategory : Category? {
         didSet{
             loadItems()
+            tableView.separatorStyle = .none
         }
     }
         
@@ -31,6 +32,32 @@ class TableViewController: UITableViewController {
         tableView.rowHeight = 80.0
         
     }
+    override func viewWillAppear(_ animated: Bool) {
+            let nBar = navigationController?.navigationBar
+        
+        if let colourHex = selectedCategory?.colour{
+            
+            title = selectedCategory!.name
+            
+            guard let navBar = nBar else { fatalError("Navigatin controller does not exist.")}
+           
+            if let navBarColour = UIColor(hexString: colourHex){
+                navBar.backgroundColor = navBarColour
+                navBar.tintColor = ContrastColorOf(navBarColour, returnFlat: true)
+                navBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: ContrastColorOf(navBarColour, returnFlat: true)]
+                searchBar.barTintColor = navBarColour
+                
+            }
+            searchBar.searchTextField.backgroundColor = FlatWhite()
+            
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithOpaqueBackground()
+            appearance.backgroundColor = UIColor(hexString: colourHex)
+            nBar?.standardAppearance = appearance;
+            nBar?.scrollEdgeAppearance = nBar?.standardAppearance
+        }
+    }
+    
     //    MARK: - didAddBarButtonItemTapped
     @IBAction func didAddBarButtonItemTapped(_ sender: UIBarButtonItem) {
         presentAddAlert()
@@ -97,6 +124,7 @@ class TableViewController: UITableViewController {
             if let colour = UIColor(hexString: selectedCategory!.colour)?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(data!.count)) {
                 cell.backgroundColor = colour
                 cell.textLabel?.textColor = ContrastColorOf(colour, returnFlat: true)
+                cell.tintColor = ContrastColorOf(colour, returnFlat: true)
             }
             cell.accessoryType = item.done ? .checkmark : .none
         }
